@@ -4,6 +4,8 @@ import { Search, Tv, Globe, Info, Play, Loader2, Filter, Radio, LayoutGrid, Aler
 import { motion, AnimatePresence } from 'motion/react';
 import { VideoPlayer } from './components/VideoPlayer';
 import { Channel } from './types';
+import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
+import { channel } from 'diagnostics_channel';
 
 const SOURCES = [
   { name: 'Global Index', url: 'https://iptv-org.github.io/iptv/index.m3u' },
@@ -22,6 +24,12 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [currentSource, setCurrentSource] = useState(SOURCES[0]); // Default to Global Index to get all channels
   const [displayLimit, setDisplayLimit] = useState(200);
+  const [likedChannels, setLikedChannels] = useState<Channel[]>([]);
+
+  useEffect(() => {
+    const stored = JSON.parse(localStorage.getItem('likedChannels') || '[]');
+    setLikedChannels(stored);
+  }, []);
 
   useEffect(() => {
     const fetchPlaylist = async () => {
@@ -35,7 +43,7 @@ export default function App() {
         console.log("Data : ", data)
         const result = parse(data);
         console.log("result : ", result)
-        
+
         const formattedChannels: Channel[] = result.items.map(item => ({
           name: item.name,
           url: item.url,
@@ -74,11 +82,38 @@ export default function App() {
   const filteredChannels = useMemo(() => {
     return channels.filter(channel => {
       const matchesSearch = channel.name.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = selectedCategory === 'All' || 
+      const matchesCategory = selectedCategory === 'All' ||
         (channel.category && channel.category.split(';').map(s => s.trim()).includes(selectedCategory));
       return matchesSearch && matchesCategory;
     });
   }, [channels, searchQuery, selectedCategory]);
+
+  function handleChannelSelect(channel: Channel) {
+    console.log("Selected channel: ", channel);
+    setSelectedChannel(channel);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function handleLike(channel: Channel) {
+    let updated: Channel[] = [];
+
+    const isAlreadyLiked = likedChannels.some(c => c.url === channel.url);
+
+    if (isAlreadyLiked) {
+      // ❌ Remove (unlike)
+      updated = likedChannels.filter(c => c.url !== channel.url);
+    } else {
+      // ✅ Add (like)
+      updated = [...likedChannels, channel];
+    }
+
+    setLikedChannels(updated);
+    localStorage.setItem('likedChannels', JSON.stringify(updated));
+  }
+
+  function isLiked(channel: Channel) {
+    return likedChannels.some(c => c.url === channel.url);
+  }
 
   if (error) {
     return (
@@ -86,7 +121,7 @@ export default function App() {
         <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
         <h2 className="text-xl font-black uppercase tracking-tighter mb-2">Failed to Load Playlist</h2>
         <p className="text-gray-500 text-xs font-bold uppercase tracking-tight max-w-xs mb-6">{error}</p>
-        <button 
+        <button
           onClick={() => window.location.reload()}
           className="px-8 py-3 bg-gray-900 text-white rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-gray-800 transition-all"
         >
@@ -108,8 +143,15 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#F3F4F6] text-gray-900 font-dmsans selection:bg-gray-900 selection:text-white">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-gray-200 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-gray-200 px-6 py-4 flex flex-col md:flex-row md:items-center cursor-pointer justify-between gap-6">
+        <div className="flex items-center gap-4 cursor-pointer" onClick={() => {
+          setSelectedChannel(null);
+          setSearchQuery('');
+          setSelectedCategory('All');
+          setCurrentSource(SOURCES[0]);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          window.location.reload();
+        }}>
           <div className=" rounded-2xl shadow-sm overflow-hidden w-11 h-11 flex items-center justify-center">
             <img src="/favicon.png" alt="Dtv Logo" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
           </div>
@@ -138,11 +180,10 @@ export default function App() {
                 setCurrentSource(source);
                 setSelectedCategory('All');
               }}
-              className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-tight transition-all border ${
-                currentSource.url === source.url 
-                  ? 'bg-gray-900 text-white border-gray-900' 
-                  : 'bg-white text-gray-500 border-gray-200 hover:border-gray-900 hover:text-gray-900'
-              }`}
+              className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-tight transition-all border ${currentSource.url === source.url
+                ? 'bg-gray-900 text-white border-gray-900'
+                : 'bg-white text-gray-500 border-gray-200 hover:border-gray-900 hover:text-gray-900'
+                }`}
             >
               {source.name}
             </button>
@@ -163,11 +204,10 @@ export default function App() {
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`w-full px-4 py-3 rounded-xl text-xs font-bold transition-all text-left flex items-center justify-between group ${
-                    selectedCategory === cat 
-                      ? 'bg-gray-900 text-white' 
-                      : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
-                  }`}
+                  className={`w-full px-4 py-3 rounded-xl text-xs font-bold transition-all text-left flex items-center justify-between group cursor-pointer ${selectedCategory === cat
+                    ? 'bg-gray-900 text-white'
+                    : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
+                    }`}
                 >
                   <span>{cat}</span>
                   {selectedCategory !== cat && (
@@ -199,22 +239,36 @@ export default function App() {
                 exit={{ opacity: 0, scale: 0.98 }}
                 className="space-y-6"
               >
-                <VideoPlayer 
-                  url={selectedChannel.url} 
+                <VideoPlayer
+                  url={selectedChannel.url}
                   onClose={() => setSelectedChannel(null)}
                 />
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
-                  <div>
+                  <div className="w-full">
                     <div className="flex items-center gap-2 mb-2">
                       <Radio className="w-3 h-3 text-red-500 animate-pulse" />
                       <span className="text-[10px] font-bold uppercase tracking-tight text-gray-400">Live Now</span>
                     </div>
-                    <h2 className="text-3xl font-black uppercase tracking-tighter">{selectedChannel.name}</h2>
-                    <div className="flex flex-wrap gap-2 mt-4">
-                      <span className="px-3 py-1 bg-white border border-gray-100 rounded-full text-[10px] font-bold uppercase tracking-tight text-gray-500">{selectedChannel.category}</span>
-                      <span className="px-3 py-1 bg-white border border-gray-100 rounded-full text-[10px] font-bold uppercase tracking-tight text-gray-500 flex items-center gap-1.5">
-                        <Globe className="w-3 h-3" /> {selectedChannel.country}
-                      </span>
+                    <div className="flex justify-between w-full">
+                      <div className="">
+                        <h2 className="text-3xl font-black uppercase tracking-tighter">{selectedChannel.name}</h2>
+                        <div className="flex flex-wrap gap-2 mt-4">
+                          <span className="px-3 py-1 bg-white border border-gray-100 rounded-full text-[10px] font-bold uppercase tracking-tight text-gray-500">{selectedChannel.category}</span>
+                          <span className="px-3 py-1 bg-white border border-gray-100 rounded-full text-[10px] font-bold uppercase tracking-tight text-gray-500 flex items-center gap-1.5">
+                            <Globe className="w-3 h-3" /> {selectedChannel.country}
+                          </span>
+                        </div>
+                      </div>
+                      <div
+                        className="text-4xl cursor-pointer"
+                        onClick={() => handleLike(selectedChannel)}
+                      >
+                        {isLiked(selectedChannel) ? (
+                          <AiFillHeart className="text-red-500" />
+                        ) : (
+                          <AiOutlineHeart className="text-black" />
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -240,24 +294,21 @@ export default function App() {
                   whileHover={{ y: -6, scale: 1.02 }}
                   whileTap={{ scale: 0.96 }}
                   onClick={() => {
-                    setSelectedChannel(channel);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    handleChannelSelect(channel);
                   }}
-                  className={`group relative aspect-square bg-white border rounded-[2rem] p-6 flex flex-col items-center justify-center text-center transition-all shadow-sm ${
-                    selectedChannel?.url === channel.url 
-                      ? 'border-gray-900 ring-4 ring-gray-900/5' 
-                      : 'border-gray-100 hover:border-gray-200'
-                  }`}
+                  className={`group relative aspect-square bg-white border rounded-[2rem] p-6 flex flex-col items-center justify-center text-center cursor-pointer shadow-sm transition-all duration-300 ${selectedChannel?.url === channel.url
+                    ? 'border-gray-900 ring-4 ring-gray-900/5'
+                    : 'border-gray-100 hover:border-gray-200 hover:bg-sky-200 transition-all duration-300'
+                    }`}
                 >
                   <div className="relative w-16 h-16 mb-4">
                     {channel.logo ? (
-                      <img 
-                        src={channel.logo} 
+                      <img
+                        src={channel.logo}
                         alt={channel.name}
                         referrerPolicy="no-referrer"
-                        className={`w-full h-full object-contain transition-all duration-500 ${
-                          selectedChannel?.url === channel.url ? 'scale-110' : 'group-hover:scale-110'
-                        }`}
+                        className={`w-full h-full object-contain transition-all duration-500 ${selectedChannel?.url === channel.url ? 'scale-110' : 'group-hover:scale-110'
+                          }`}
                         onError={(e) => {
                           (e.target as HTMLImageElement).style.display = 'none';
                         }}
@@ -271,9 +322,9 @@ export default function App() {
                   <span className="text-[11px] font-bold uppercase tracking-tight leading-tight line-clamp-2 text-gray-600 group-hover:text-gray-900 transition-colors">
                     {channel.name}
                   </span>
-                  
+
                   {selectedChannel?.url === channel.url && (
-                    <motion.div 
+                    <motion.div
                       layoutId="active-indicator"
                       className="absolute -top-2 -right-2 w-6 h-6 bg-gray-900 rounded-full flex items-center justify-center border-4 border-[#F3F4F6]"
                     >
@@ -283,7 +334,7 @@ export default function App() {
                 </motion.button>
               ))}
             </div>
-            
+
             {filteredChannels.length > displayLimit && (
               <div className="mt-16 text-center py-10">
                 <button
