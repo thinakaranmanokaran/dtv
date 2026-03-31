@@ -42,7 +42,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, onClose }) => {
         setError("⚠️ This channel signal is low. Please try another channel.");
         setLoading(false);
       }
-    }, 10000);
+    }, 25000);
 
     // ✅ When video actually starts playing
     const handlePlaying = () => {
@@ -62,13 +62,13 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, onClose }) => {
       clearTimeout(signalTimer);
 
       setError(
-        "This stream is currently unavailable or blocked by CORS. Try the proxy if available."
+        "Stream failed. Possible reasons: Geo-blocked, expired link, or server restriction."
       );
       setLoading(false);
     };
 
     const streamUrl = useProxy
-      ? `https://corsproxy.io/?${encodeURIComponent(url)}`
+      ? `http://localhost:5000/api/stream?url=${encodeURIComponent(url)}`
       : url;
 
     setLoadingStep(1);

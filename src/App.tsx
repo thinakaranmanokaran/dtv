@@ -6,10 +6,12 @@ import { VideoPlayer } from './components/VideoPlayer';
 import { Channel } from './types';
 import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
 import { channel } from 'diagnostics_channel';
+import { addShortcut, on, clearShortcuts } from "keyboard-shortcutx";
+import { LuBadgeInfo } from "react-icons/lu";
 
 const SOURCES = [
   { name: 'Global Index', url: 'https://iptv-org.github.io/iptv/index.m3u' },
-  { name: 'News', url: 'https://iptv-org.github.io/iptv/categories/news.m3u' },
+  // { name: 'News', url: 'https://iptv-org.github.io/iptv/categories/news.m3u' },
   { name: 'Movies', url: 'https://iptv-org.github.io/iptv/categories/movies.m3u' },
   { name: 'Music', url: 'https://iptv-org.github.io/iptv/categories/music.m3u' },
   { name: 'Sports', url: 'https://iptv-org.github.io/iptv/categories/sports.m3u' },
@@ -25,10 +27,25 @@ export default function App() {
   const [currentSource, setCurrentSource] = useState(SOURCES[0]); // Default to Global Index to get all channels
   const [displayLimit, setDisplayLimit] = useState(200);
   const [likedChannels, setLikedChannels] = useState<Channel[]>([]);
+  const [viewMode, setViewMode] = useState<'all' | 'liked'>('all');
 
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem('likedChannels') || '[]');
     setLikedChannels(stored);
+
+    const singleEscape = addShortcut("ctrl+c", () => {
+      setSelectedChannel(null);
+    });
+
+    const doubleEscape = addShortcut("ctrl+x", () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.location.reload();
+    });
+
+    return () => {
+      singleEscape();
+      doubleEscape();
+    }
   }, []);
 
   useEffect(() => {
@@ -37,12 +54,12 @@ export default function App() {
         setLoading(true);
         setError(null);
         const response = await fetch(currentSource.url);
-        console.log("Res : ", response)
+        // console.log("Res : ", response)
         if (!response.ok) throw new Error('Failed to fetch playlist');
         const data = await response.text();
-        console.log("Data : ", data)
+        // console.log("Data : ", data)
         const result = parse(data);
-        console.log("result : ", result)
+        // console.log("result : ", result)
 
         const formattedChannels: Channel[] = result.items.map(item => ({
           name: item.name,
@@ -89,7 +106,7 @@ export default function App() {
   }, [channels, searchQuery, selectedCategory]);
 
   function handleChannelSelect(channel: Channel) {
-    console.log("Selected channel: ", channel);
+    // console.log("Selected channel: ", channel);
     setSelectedChannel(channel);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -107,13 +124,27 @@ export default function App() {
       updated = [...likedChannels, channel];
     }
 
-    setLikedChannels(updated);
-    localStorage.setItem('likedChannels', JSON.stringify(updated));
+    setLikedChannels(prev => {
+      let updated;
+
+      const exists = prev.some(c => c.url === channel.url);
+
+      if (exists) {
+        updated = prev.filter(c => c.url !== channel.url);
+      } else {
+        updated = [...prev, channel];
+      }
+
+      localStorage.setItem('likedChannels', JSON.stringify(updated));
+      return updated;
+    });
   }
 
   function isLiked(channel: Channel) {
     return likedChannels.some(c => c.url === channel.url);
   }
+
+  const displayChannels = viewMode === 'liked' ? likedChannels : filteredChannels;
 
   if (error) {
     return (
@@ -143,7 +174,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#F3F4F6] text-gray-900 font-dmsans selection:bg-gray-900 selection:text-white">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-gray-200 px-6 py-4 flex flex-col md:flex-row md:items-center cursor-pointer justify-between gap-6">
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-gray-200 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4 cursor-pointer" onClick={() => {
           setSelectedChannel(null);
           setSearchQuery('');
@@ -179,6 +210,7 @@ export default function App() {
               onClick={() => {
                 setCurrentSource(source);
                 setSelectedCategory('All');
+                setViewMode('all'); // ✅ important
               }}
               className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-tight transition-all border ${currentSource.url === source.url
                 ? 'bg-gray-900 text-white border-gray-900'
@@ -188,6 +220,24 @@ export default function App() {
               {source.name}
             </button>
           ))}
+          {
+            likedChannels.length > 0 && (
+              <button
+                onClick={() => {
+                  setViewMode('liked');
+                  setSelectedCategory('All');
+                  setSearchQuery('');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-tight flex items-center transition-all border ${viewMode === 'liked'
+                  ? ' border-red-500'
+                  : 'bg-white text-gray-500 border-gray-200 hover:border-gray-900 hover:text-gray-900'
+                  }`}
+              >
+                <div className={`${viewMode === 'liked' ? "text-red-500" : "text-black"} text-sm mr-1 transition-colors duration-300`}><AiFillHeart /></div> Liked ({likedChannels.length})
+              </button>
+            )
+          }
         </div>
       </header>
 
@@ -195,9 +245,12 @@ export default function App() {
         {/* Sidebar */}
         <aside className="lg:col-span-3 space-y-8">
           <div className="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm">
-            <div className="flex items-center gap-2 mb-6 text-gray-400">
-              <Filter className="w-4 h-4" />
-              <h3 className="text-[10px] font-bold uppercase tracking-tight">Categories</h3>
+            <div className="flex justify-between items-center pb-6 ">
+              <div className="flex items-center gap-2  text-gray-400">
+                <Filter className="w-4 h-4" />
+                <h3 className="text-[10px] font-bold uppercase tracking-tight">Categories</h3>
+              </div>
+              <div className="text-md cursor-help" title="to close the video : Ctrl + C & to reload the app : Ctrl + X"><LuBadgeInfo /></div>
             </div>
             <div className="space-y-1 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
               {categories.map(cat => (
@@ -226,6 +279,15 @@ export default function App() {
             </p>
           </div>
         </aside>
+
+        {viewMode === 'liked' && likedChannels.length === 0 && (
+          <div className="py-32 text-center bg-white rounded-[3rem] border border-dashed border-gray-200">
+            <Info className="w-10 h-10 text-gray-200 mx-auto mb-4" />
+            <p className="text-gray-400 font-bold text-[10px] uppercase tracking-tight">
+              No liked channels yet
+            </p>
+          </div>
+        )}
 
         {/* Content */}
         <section className="lg:col-span-9 space-y-10">
@@ -260,13 +322,13 @@ export default function App() {
                         </div>
                       </div>
                       <div
-                        className="text-4xl cursor-pointer"
+                        className="text-4xl cursor-pointer transition-colors duration-300"
                         onClick={() => handleLike(selectedChannel)}
                       >
                         {isLiked(selectedChannel) ? (
-                          <AiFillHeart className="text-red-500" />
+                          <div className="text-red-500 transition-colors duration-300"><AiFillHeart /></div>
                         ) : (
-                          <AiOutlineHeart className="text-black" />
+                          <div className="text-black hover:text-red-400 transition-colors duration-300"><AiOutlineHeart /></div>
                         )}
                       </div>
                     </div>
@@ -282,13 +344,13 @@ export default function App() {
               <div className="flex items-center gap-3">
                 <LayoutGrid className="w-5 h-5 text-gray-400" />
                 <h3 className="text-xl font-black uppercase tracking-tighter">
-                  {selectedCategory} <span className="text-gray-300">/</span> {filteredChannels.length} Channels
+                  {selectedCategory} <span className="text-gray-300">/</span> {displayChannels.length} Channel{displayChannels.length > 1 && "s"}
                 </h3>
               </div>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-5">
-              {filteredChannels.slice(0, displayLimit).map((channel, idx) => (
+              {displayChannels.slice(0, displayLimit).map((channel, idx) => (
                 <motion.button
                   key={`${channel.url}-${idx}`}
                   whileHover={{ y: -6, scale: 1.02 }}
@@ -335,18 +397,18 @@ export default function App() {
               ))}
             </div>
 
-            {filteredChannels.length > displayLimit && (
+            {displayChannels.length > displayLimit && (
               <div className="mt-16 text-center py-10">
                 <button
                   onClick={() => setDisplayLimit(prev => prev + 200)}
                   className="px-8 py-4 bg-white border border-gray-200 rounded-2xl text-xs font-bold uppercase tracking-tight hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all shadow-sm"
                 >
-                  Load More Channels ({filteredChannels.length - displayLimit} remaining)
+                  Load More Channels ({displayChannels.length - displayLimit} remaining)
                 </button>
               </div>
             )}
 
-            {filteredChannels.length === 0 && (
+            {displayChannels.length === 0 && (
               <div className="py-32 text-center bg-white rounded-[3rem] border border-dashed border-gray-200">
                 <Info className="w-10 h-10 text-gray-200 mx-auto mb-4" />
                 <p className="text-gray-400 font-bold text-[10px] uppercase tracking-tight">No channels found in this category</p>
@@ -385,6 +447,6 @@ export default function App() {
           background: #D1D5DB;
         }
       `}</style>
-    </div>
+    </div >
   );
 }

@@ -10,3 +10,10 @@
     @apply font-dmsans tracking-tight;
   }
 }
+
+button{
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+}
