@@ -50,6 +50,12 @@ app.get("/api/stream", async (req, res) => {
     }
 });
 
+// /Waking up from Sleep in Render
+app.get("/api/wake-up", (req, res) => {
+    res.status(200).send("Waking up...");
+    console.log("Received wake-up call, keeping the server alive.");
+});
+
 app.listen(PORT, () => {
     console.log(`🚀 Proxy server running on http://localhost:${PORT}`);
 });

@@ -25,7 +25,7 @@ Dtv is a minimalistic, high-performance IPTV stream viewer designed for clarity,
 
 **Thinakaran Manokaran**
 - Website: [https://thinakaran.dev/](https://thinakaran.dev/)
-- GitHub: [@thinakaran](https://github.com/thinakaran)
+- GitHub: [@thinakaranmanokaran](https://github.com/thinakaranmanokaran)
 
 ## 📄 License
 

@@ -8,6 +8,7 @@ import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
 import { channel } from 'diagnostics_channel';
 import { addShortcut, on, clearShortcuts } from "keyboard-shortcutx";
 import { LuBadgeInfo } from "react-icons/lu";
+import images from './assets/images';
 
 const SOURCES = [
   { name: 'Global Index', url: 'https://iptv-org.github.io/iptv/index.m3u' },
@@ -28,6 +29,22 @@ export default function App() {
   const [displayLimit, setDisplayLimit] = useState(200);
   const [likedChannels, setLikedChannels] = useState<Channel[]>([]);
   const [viewMode, setViewMode] = useState<'all' | 'liked'>('all');
+
+  const API_URL = import.meta.env.VITE_API_URL
+
+  // Send a sample Request for Backend to Wake up to API_URL/api/wakeup via GET method
+  useEffect(() => {
+    const wakeUp = async () => {
+      try {
+        await fetch(`${API_URL}/api/wake-up`);
+        console.log("API woke up");
+      } catch (error) {
+        console.error("Wake-up failed");
+      }
+    };
+
+    wakeUp();
+  }, []);
 
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem('likedChannels') || '[]');
@@ -184,7 +201,7 @@ export default function App() {
           window.location.reload();
         }}>
           <div className=" rounded-2xl shadow-sm overflow-hidden w-11 h-11 flex items-center justify-center">
-            <img src="/favicon.png" alt="Dtv Logo" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+            <img src={images.Logo} alt="Dtv Live TV Streaming Logo" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
           </div>
           <div>
             <h1 className="text-2xl font-black uppercase tracking-tighter leading-none">Dtv</h1>
@@ -193,8 +210,12 @@ export default function App() {
         </div>
 
         <div className="relative flex-1 max-w-2xl">
+          <label htmlFor="search" className="sr-only">
+            Search Channels
+          </label>
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input
+            id="search"
             type="text"
             placeholder="Search channels..."
             value={searchQuery}
@@ -321,7 +342,8 @@ export default function App() {
                           </span>
                         </div>
                       </div>
-                      <div
+                      <button
+                        aria-label="Like this channel"
                         className="text-4xl cursor-pointer transition-colors duration-300"
                         onClick={() => handleLike(selectedChannel)}
                       >
@@ -330,7 +352,7 @@ export default function App() {
                         ) : (
                           <div className="text-black hover:text-red-400 transition-colors duration-300"><AiOutlineHeart /></div>
                         )}
-                      </div>
+                      </button>
                     </div>
                   </div>
                 </div>

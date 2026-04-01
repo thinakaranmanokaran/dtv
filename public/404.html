@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+
+    <!-- Viewport -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- SEO -->
+    <title>Page Not Found | Dtv</title>
+    <meta name="description" content="The page you are looking for does not exist. Redirecting to Dtv home page." />
+    <meta name="robots" content="noindex, follow" />
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://thinakaranmanokaran.github.io/dtv/" />
+
+    <!-- Theme -->
+    <meta name="theme-color" content="#111827" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Page Not Found | Dtv" />
+    <meta property="og:description" content="Redirecting you to the Dtv home page." />
+    <meta property="og:url" content="https://thinakaranmanokaran.github.io/dtv/" />
+    <meta property="og:type" content="website" />
+
+    <!-- Redirect (SEO-safe delay) -->
+    <meta http-equiv="refresh" content="2;url=/dtv/" />
+
+    <style>
+        body {
+            margin: 0;
+            font-family: system-ui, sans-serif;
+            background: #111827;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        .box {
+            max-width: 400px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        p {
+            color: #9ca3af;
+            font-size: 14px;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: white;
+            color: black;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="box">
+        <h1>404</h1>
+        <p>Page not found. Redirecting to home...</p>
+        <a href="/dtv/">Go to Home</a>
+    </div>
+
+    <!-- JS fallback redirect -->
+    <script>
+        setTimeout(() => {
+            window.location.href = "/dtv/";
+        }, 2000);
+    </script>
+</body>
+
+</html>

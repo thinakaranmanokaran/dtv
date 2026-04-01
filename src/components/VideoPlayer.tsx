@@ -14,6 +14,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, onClose }) => {
   const [error, setError] = useState<string | null>(null);
   const [useProxy, setUseProxy] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
+  const API_URL = import.meta.env.VITE_API_URL
 
   const steps = [
     "Initializing player engine...",
@@ -68,7 +69,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, onClose }) => {
     };
 
     const streamUrl = useProxy
-      ? `http://localhost:5000/api/stream?url=${encodeURIComponent(url)}`
+      ? `${API_URL}/api/stream?url=${encodeURIComponent(url)}`
       : url;
 
     setLoadingStep(1);
@@ -250,6 +251,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, onClose }) => {
 
       {onClose && (
         <button
+          aria-label="Close video player"
           onClick={onClose}
           className="absolute top-4 right-4 bg-white/20 hover:bg-white/40 text-white p-2 rounded-full backdrop-blur-md transition-all z-10 cursor-pointer"
         >
