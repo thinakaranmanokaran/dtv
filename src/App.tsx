@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { parse } from 'iptv-playlist-parser';
 import { Search, Tv, Globe, Info, Play, Loader2, Filter, Radio, LayoutGrid, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -29,22 +29,27 @@ export default function App() {
   const [displayLimit, setDisplayLimit] = useState(200);
   const [likedChannels, setLikedChannels] = useState<Channel[]>([]);
   const [viewMode, setViewMode] = useState<'all' | 'liked'>('all');
+  const hasCalled = useRef(false);
 
   const API_URL = import.meta.env.VITE_API_URL
 
   // Send a sample Request for Backend to Wake up to API_URL/api/wakeup via GET method
-  useEffect(() => {
-    const wakeUp = async () => {
-      try {
-        await fetch(`${API_URL}/api/wake-up`);
-        console.log("API woke up");
-      } catch (error) {
-        console.error("Wake-up failed");
-      }
-    };
 
-    wakeUp();
-  }, []);
+useEffect(() => {
+  if (hasCalled.current) return;
+  hasCalled.current = true;
+
+  const wakeUp = async () => {
+    try {
+      await fetch(`${API_URL}/api/wake-up`);
+      console.log("API woke up");
+    } catch (error) {
+      console.error("Wake-up failed");
+    }
+  };
+
+  wakeUp();
+}, []);
 
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem('likedChannels') || '[]');
