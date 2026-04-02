@@ -196,7 +196,7 @@ useEffect(() => {
   return (
     <div className="min-h-screen bg-[#F3F4F6] text-gray-900 font-dmsans selection:bg-gray-900 selection:text-white">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-gray-200 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-gray-200 px-3 md:px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4 cursor-pointer" onClick={() => {
           setSelectedChannel(null);
           setSearchQuery('');
@@ -229,7 +229,7 @@ useEffect(() => {
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 overflow-scroll scrollbar-hidden">
           {SOURCES.map(source => (
             <button
               key={source.url}
@@ -238,7 +238,7 @@ useEffect(() => {
                 setSelectedCategory('All');
                 setViewMode('all'); // ✅ important
               }}
-              className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-tight transition-all border ${currentSource.url === source.url
+              className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-tight transition-all border text-nowrap ${currentSource.url === source.url
                 ? 'bg-gray-900 text-white border-gray-900'
                 : 'bg-white text-gray-500 border-gray-200 hover:border-gray-900 hover:text-gray-900'
                 }`}
@@ -255,7 +255,7 @@ useEffect(() => {
                   setSearchQuery('');
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
-                className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-tight flex items-center transition-all border ${viewMode === 'liked'
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-tight flex items-center transition-all border text-nowrap ${viewMode === 'liked'
                   ? ' border-red-500'
                   : 'bg-white text-gray-500 border-gray-200 hover:border-gray-900 hover:text-gray-900'
                   }`}
@@ -337,9 +337,9 @@ useEffect(() => {
                       <Radio className="w-3 h-3 text-red-500 animate-pulse" />
                       <span className="text-[10px] font-bold uppercase tracking-tight text-gray-400">Live Now</span>
                     </div>
-                    <div className="flex justify-between w-full">
+                    <div className="flex justify-between w-full items-start">
                       <div className="">
-                        <h2 className="text-3xl font-black uppercase tracking-tighter">{selectedChannel.name}</h2>
+                        <h2 className="text-3xl font-black uppercase tracking-tighter text-nowrap">{selectedChannel.name}</h2>
                         <div className="flex flex-wrap gap-2 mt-4">
                           <span className="px-3 py-1 bg-white border border-gray-100 rounded-full text-[10px] font-bold uppercase tracking-tight text-gray-500">{selectedChannel.category}</span>
                           <span className="px-3 py-1 bg-white border border-gray-100 rounded-full text-[10px] font-bold uppercase tracking-tight text-gray-500 flex items-center gap-1.5">
@@ -353,9 +353,9 @@ useEffect(() => {
                         onClick={() => handleLike(selectedChannel)}
                       >
                         {isLiked(selectedChannel) ? (
-                          <div className="text-red-500 transition-colors duration-300"><AiFillHeart /></div>
+                          <div className="text-red-500 text-2xl md:text-lg transition-colors duration-300"><AiFillHeart /></div>
                         ) : (
-                          <div className="text-black hover:text-red-400 transition-colors duration-300"><AiOutlineHeart /></div>
+                          <div className="text-black text-2xl md:text-lg hover:text-red-400 transition-colors duration-300"><AiOutlineHeart /></div>
                         )}
                       </button>
                     </div>
